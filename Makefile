@@ -3,11 +3,19 @@ SRC     =	main.c			\
 			ft_strlen.c		\
 			ft_strdup.c		\
 			ft_strcat.c	\
+			ft_putnbr.c	\
+			ft_putstr.c	\
 			ft_realloc_str.c	\
 			ft_strlcpy.c	\
 			ft_strjoin.c	\
 			get_next_line.c	\
-			check_map.c
+			check_map.c	\
+			open_window.c	\
+			close_window.c	\
+			solve_map.c	\
+			find_in_str.c	\
+			render.c	\
+			move.c		\
 
 OBJ		=	$(SRC:.c=.o)
 

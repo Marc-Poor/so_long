@@ -1,35 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_realloc_str.c                                   :+:      :+:    :+:   */
+/*   ft_putstr.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mfaure <mfaure@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/10 15:46:32 by mfaure            #+#    #+#             */
-/*   Updated: 2025/10/17 18:11:06 by mfaure           ###   ########.fr       */
+/*   Created: 2025/05/12 17:10:14 by mfaure            #+#    #+#             */
+/*   Updated: 2025/05/28 15:09:24 by mfaure           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "so_long.h"
+#include <unistd.h>
 
-char	*ft_realloc_str(char *str, size_t new_len)
+void	ft_putstr(char *s)
 {
-	char	*new_str;
-	size_t	i;
+	int	i;
 
 	i = 0;
-	new_str = malloc(new_len + 1);
-	if (!new_str)
-		return (NULL);
-	if (str)
-	{
-		while (str[i] && i < new_len)
-		{
-			new_str[i] = str[i];
-			i++;
-		}
-		free(str);
-	}
-	new_str[i] = '\0';
-	return (new_str);
+	while (s[i] != '\0')
+		i++;
+	write(1, s, i);
 }

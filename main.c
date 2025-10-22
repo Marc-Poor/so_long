@@ -6,77 +6,127 @@
 /*   By: mfaure <mfaure@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/30 04:41:47 by mfaure            #+#    #+#             */
-/*   Updated: 2025/10/11 16:53:40 by mfaure           ###   ########.fr       */
+/*   Updated: 2025/10/22 14:58:01 by mfaure           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <mlx.h>
 #include "so_long.h"
-#define ESC_KEY 65307
 
-typedef struct	s_vars {
-	void	*mlx;
-	void	*mlx_window;
-}				t_vars;
-
-int	handle_keypress(int keycode, t_vars *vars)
+int	compare(char *av, int fd)
 {
-	if (keycode == ESC_KEY)
+	int		len;
+	char	*str;
+	int		i;
+
+	str = ".ber\0";
+	len = ft_strlen(av) - 4;
+	i = 0;
+	while (i < 4)
 	{
-		mlx_destroy_window(vars->mlx, vars->mlx_window);
-		exit(0);
+		if (av[len] != str[i])
+		{
+			close(fd);
+			ft_putstr("no .ber\n");
+			return (0);
+		}
+		len++;
+		i++;
 	}
+	return (1);
+}
+
+void	find_player(t_game *game, char **map)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (map[y] != NULL)
+	{
+		x = 0;
+		while (map[y][x])
+		{
+			if (map[y][x] == 'P')
+			{
+				game->player.x = x;
+				game->player.y = y;
+			}
+			x++;
+		}
+		y++;
+	}
+}
+
+int	close_everything(t_game *game, char *str, int fd)
+{
+	int	i;
+
+	i = 0;
+	if (game->map)
+	{
+		while (game->map[i] != NULL)
+		{
+			free(game->map[i]);
+			i++;
+		}
+		free(game->map);
+	}
+	if (str)
+		free(str);
+	if (fd >= 0)
+		close(fd);
 	return (0);
 }
 
-int close_window(void)
+int	error_handling(t_game *game, char *str, int fd)
 {
-    exit(0);
-    return (0);
+	if (game->str == NULL)
+		return (close_everything(game, game->str, game->fd));
+	if (check_map_elements(game->str, game, 0, 0) == -1)
+		return (close_everything(game, game->str, game->fd));
+	game->map = ft_split(game->str, '\n');
+	if (game->map == NULL || check_map(game->map, game, 0,
+			ft_strlen(game->map[0])) == -1)
+		return (close_everything(game, str, fd));
+	find_player(game, game->map);
+	if (is_map_finishable(game, 0, 0) == 0)
+	{
+		ft_putstr("non solvable map\n");
+		return (close_everything(game, str, fd));
+	}
+	game->player.moves = 1;
+	return (1);
 }
-
-int	open_window(void)
-{
-	t_vars	vars;
-
-	vars.mlx = mlx_init();
-	vars.mlx_window = mlx_new_window(vars.mlx, 1920, 1080, "Hello world!");
-	mlx_key_hook(vars.mlx_window, handle_keypress, &vars);
-	mlx_hook(vars.mlx_window, 17, 0, close_window, NULL);
-	mlx_loop(vars.mlx);
-	return (0);
-}
-
 
 int	main(int ac, char **av)
 {
-	char	*str;
 	char	*line;
-	int		fd;
 	t_game	game;
 
 	if (ac != 2)
 		return (0);
-	fd = open(av[1], O_RDONLY);
-    if (fd < 0)
-    {
-        perror("Error opening file");
-        return (1);
-    }
-	line = get_next_line(fd);
-	str = ft_strdup(line);
-	while ((line = get_next_line(fd)) != NULL)
-	{
-		str = ft_realloc_str(str, ft_strlen(str) + ft_strlen(line));
-		ft_strcat(str, line);
-	}
-	if (str == NULL || check_map_elements(str, &game) == -1)
+	game.map = NULL;
+	game.fd = open(av[1], O_RDONLY);
+	if (game.fd < 0 || compare(av[1], game.fd) == 0)
+		return (1);
+	line = get_next_line(game.fd);
+	game.str = ft_strdup("");
+	if (line == NULL || game.str == NULL)
 		return (0);
-	game.map = ft_split(str, '\n');
-	for (int i = 0; game.map[i] != NULL; i++)
-		printf("%s\n", game.map[i]);
-	if (game.map == NULL || check_map(game.map, &game) == -1)
-		return 0;
-	open_window();
-	return 0;
+	while (line != NULL)
+	{
+		game.str = ft_realloc_str(game.str, ft_strlen(game.str)
+				+ ft_strlen(line));
+		ft_strcat(game.str, line);
+		free(line);
+		line = get_next_line(game.fd);
+	}
+	if (!error_handling(&game, game.str, game.fd))
+		return (0);
+	open_window(&game);
+	close_everything(&game, game.str, game.fd);
+	return (0);
 }
+
+// for (int i = 0; game.map[i] != NULL; i++)
+//	printf("%s\n", game.map[i]);
